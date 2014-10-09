@@ -15,23 +15,45 @@
 		currentResolution = checkResolution(dpr, resolutions);
 
 
-	function lazyImages(images) {
+	function lazyImages(images, options) {
 		images = images || document.images;
 		images = images.length ? [].slice.call(images, 0) : [images];
 		
+		options = extend(settings, options);
+		
 		images
 			.filter(notLoaded)
-			.forEach(loadImage);
+			.forEach(loadImage(options));
 	}
 
 	function notLoaded(image) {
 		return !image.src;
 	}
 
-	function loadImage(image) {
-		var src = getImageSrc(image, currentResolution);
-		
-		image.src = src;
+	function loadImage(options) {
+		return function (image) {
+			var src = getImageSrc(image, currentResolution),
+				tempImage,
+				loader;
+			
+			if (options.lazy) {
+				tempImage = new Image();
+				// loader = createLoader(image);
+
+				// image.parentNode.replaceChild(loader, image);
+
+				tempImage.addEventListener("load", function (e) {
+					setTimeout(function () {
+						image.src = src;
+						// loader.parentNode.replaceChild(image, loader);
+					}, 1000);
+				}, false);
+
+				tempImage.src = src;
+			} else {
+				image.src = src;
+			}
+		}
 	}
 
 	function getImageSrc(image, cRes) {
@@ -60,6 +82,19 @@
 		});
 
 		return resolutions[current].key;
+	}
+
+	function extend() {
+		var newObject = {},
+			sourceObjects = [].splice.call(arguments, 0);
+
+		sourceObjects.forEach(function (obj) {
+			for (prop in obj) if (obj.hasOwnProperty(prop)) {
+				newObject[prop] = obj[prop];
+			}
+		});
+
+		return newObject;
 	}
 
 	window.lazyImages = lazyImages;
