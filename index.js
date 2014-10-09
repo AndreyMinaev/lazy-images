@@ -1,10 +1,16 @@
 ;(function (window) {
 
 	var
-		resolutions = {
-			0: 'low',
-			2: 'high'
+		resolutions = [
+			{ key: 'low', value: 0 },
+			{ key: 'high', value: 2 }
+		],
+
+		settings = {
+			lazy: true,
+			startClass: 'lazy-start'
 		},
+
 		dpr = window.devicePixelRatio,
 		currentResolution = checkResolution(dpr, resolutions);
 
@@ -33,9 +39,13 @@
 			src = dataset[cRes+'Src'];
 
 		if (!src) {
-			for ( res in resolutions ) if (resolutions.hasOwnProperty(res)) {
-				if (src = dataset[resolutions[res]+'Src']) break;
-			}
+			resolutions.some(function (res) {
+				var key = res.key;
+
+				src = dataset[resolutions[key]+'Src'];
+
+				return !!src;
+			});
 		}
 
 		return src;
@@ -44,11 +54,12 @@
 	function checkResolution(dpr, resolutions) {
 		var current = 0;
 
-		for ( res in resolutions ) if (resolutions.hasOwnProperty(res)) {
-			current = (+res > current && +res < dpr) ? res : current;
-		}
+		resolutions.forEach(function (res, index) {
+			var value = res.value;
+			current = value < dpr ? index : current;
+		});
 
-		return resolutions[current];
+		return resolutions[current].key;
 	}
 
 	window.lazyImages = lazyImages;
