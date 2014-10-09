@@ -42,6 +42,10 @@
 				tempImage,
 				loader;
 			
+			if (!src) {
+				return ;
+			}
+
 			if (options.lazy) {
 				tempImage = new Image();
 				loader = options.createLoader(image);
@@ -51,7 +55,7 @@
 				options.beforeLoadStart(loader, function () {
 
 					tempImage.addEventListener("load", function (e) {
-						
+
 						options.beforeInsertImage(loader, function () {
 							image.onload = function () {
 								loader.parentNode.replaceChild(image, loader);
