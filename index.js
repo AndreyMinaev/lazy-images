@@ -20,7 +20,7 @@
 		images = images.length ? [].slice.call(images, 0) : [images];
 		
 		options = extend(settings, options);
-		
+
 		images
 			.filter(notLoaded)
 			.forEach(loadImage(options));
@@ -38,14 +38,14 @@
 			
 			if (options.lazy) {
 				tempImage = new Image();
-				// loader = createLoader(image);
+				loader = (options.createLoader || createLoader)(image);
 
-				// image.parentNode.replaceChild(loader, image);
+				image.parentNode.replaceChild(loader, image);
 
 				tempImage.addEventListener("load", function (e) {
 					setTimeout(function () {
 						image.src = src;
-						// loader.parentNode.replaceChild(image, loader);
+						loader.parentNode.replaceChild(image, loader);
 					}, 1000);
 				}, false);
 
@@ -82,6 +82,19 @@
 		});
 
 		return resolutions[current].key;
+	}
+
+	function createLoader(image) {
+		var container = document.createElement('div');
+
+		container.innerHTML = 'Loading...';
+		container.className = 'lazy-loader';
+
+		container.style.width = image.width + 'px';
+		container.style.height = image.height + 'px';
+		container.style.lineHeight = image.height + 'px';
+
+		return container;
 	}
 
 	function extend() {
