@@ -2,11 +2,15 @@
 
 	var
 		resolutions = [
+			// value is a minimum pixel ratio for key
+			// and key is a part of data attribute(data-{{ key }}-src)
 			{ key: 'low', value: 0 },
 			{ key: 'high', value: 2 }
 		],
 
 		settings = {
+			// true - load via virtual image element
+			// false - just assign src
 			lazy: true,
 
 			beforeLoadStart: noopWithDone,
@@ -31,6 +35,11 @@
 			.forEach(loadImage(options));
 	}
 
+	/**
+	 * Filter elements with src
+	 * @param {HTMLImageElement} image
+	 * @return {boolean}
+	 */
 	function notLoaded(image) {
 		return !image.src;
 	}
@@ -50,21 +59,33 @@
 				tempImage = new Image();
 				loader = options.createLoader(image);
 
+				// remove image from DOM
 				image.parentNode.replaceChild(loader, image);
 
+				// when beforeLoadStart handler finished
 				options.beforeLoadStart(loader, function () {
 
+					// when virtual image loaded
 					tempImage.addEventListener("load", function (e) {
 
+						// when beforeInsertImage handler finished
 						options.beforeInsertImage(loader, function () {
+
+							// when image loaded from cache(almost immediately)
 							image.onload = function () {
+
+								// insert image to DOM
 								loader.parentNode.replaceChild(image, loader);
+
+								// execute afterInsertImage handler
 								options.afterInsertImage(image);
 							};
+							// load image from cache
 							image.src = src;
 						});
 					}, false);
 
+					// load image to virtual image and actually cache him
 					tempImage.src = src;
 				});
 			} else {
@@ -73,10 +94,24 @@
 		}
 	}
 
+	/**
+	 * Do nothing or invoke done function if available
+	 * @param {HTMLElement} element
+	 * @param {function} done
+	 */
 	function noopWithDone(element, done) {
 		done && done();
 	}
 
+	/**
+	 * Check dataset of image element and try to find image source url
+	 * for current resolution.
+	 * If it's not exist then trying to find any available source url
+	 * from lowest resolution to higher.
+	 * @param {HTMLImageElement} image
+	 * @param {string} cRes - current resolution key
+	 * @return {string}
+	 */
 	function getImageSrc(image, cRes) {
 		var dataset = image.dataset,
 			src = dataset[cRes+'Src'];
@@ -94,6 +129,10 @@
 		return src;
 	}
 
+	/**
+	 * 
+	 * @return {string}
+	 */
 	function checkResolution(dpr, resolutions) {
 		var current = 0;
 
@@ -105,6 +144,11 @@
 		return resolutions[current].key;
 	}
 
+	/**
+	 * 
+	 * @param {HTMLImageElement} image
+	 * @return {HTMLElement}
+	 */
 	function createLoader(image) {
 		var container = document.createElement('div');
 
@@ -118,6 +162,11 @@
 		return container;
 	}
 
+	/**
+	 * create new object augmented with passed objects
+	 * @param {object...}
+	 * @return {object}
+	 */
 	function extend() {
 		var newObject = {},
 			sourceObjects = [].splice.call(arguments, 0);
