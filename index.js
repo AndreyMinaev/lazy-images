@@ -8,7 +8,12 @@
 
 		settings = {
 			lazy: true,
-			startClass: 'lazy-start'
+
+			beforeLoadStart: noopWithDone,
+			beforeInsertImage: noopWithDone,
+			afterInsertImage: noopWithDone,
+
+			createLoader: createLoader
 		},
 
 		dpr = window.devicePixelRatio,
@@ -31,6 +36,7 @@
 	}
 
 	function loadImage(options) {
+
 		return function (image) {
 			var src = getImageSrc(image, currentResolution),
 				tempImage,
@@ -38,22 +44,33 @@
 			
 			if (options.lazy) {
 				tempImage = new Image();
-				loader = (options.createLoader || createLoader)(image);
+				loader = options.createLoader(image);
 
 				image.parentNode.replaceChild(loader, image);
 
-				tempImage.addEventListener("load", function (e) {
-					setTimeout(function () {
-						image.src = src;
-						loader.parentNode.replaceChild(image, loader);
-					}, 1000);
-				}, false);
+				options.beforeLoadStart(loader, function () {
 
-				tempImage.src = src;
+					tempImage.addEventListener("load", function (e) {
+						
+						options.beforeInsertImage(loader, function () {
+							image.onload = function () {
+								loader.parentNode.replaceChild(image, loader);
+								options.afterInsertImage(image);
+							};
+							image.src = src;
+						});
+					}, false);
+
+					tempImage.src = src;
+				});
 			} else {
 				image.src = src;
 			}
 		}
+	}
+
+	function noopWithDone(element, done) {
+		done && done();
 	}
 
 	function getImageSrc(image, cRes) {
