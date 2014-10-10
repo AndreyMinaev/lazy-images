@@ -169,7 +169,8 @@
 	 */
 	function extend() {
 		var newObject = {},
-			sourceObjects = [].splice.call(arguments, 0);
+			sourceObjects = [].splice.call(arguments, 0),
+			prop;
 
 		sourceObjects.forEach(function (obj) {
 			for (prop in obj) if (obj.hasOwnProperty(prop)) {
